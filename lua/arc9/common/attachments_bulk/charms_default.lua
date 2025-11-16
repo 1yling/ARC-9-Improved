@@ -1,3 +1,6 @@
+ARC9.KillCounterCache = {}
+ARC9.KillCounterCacheDirty = {}
+
 local ATT = {}
 
 ATT.PrintName = "Baby Crycry"
@@ -44,35 +47,38 @@ local rtsurf = Material("effects/arc9/gunscreen")
 ATT.Hook_OnKill = function(self, ent)
     if SERVER then return end
 
-    -- tracks kills on the basis of weapon class
     local weapon = self:GetClass()
-    -- check whether arc9_gunscreen table exists
 
-    if not sql.TableExists("arc9_killcounter") then
-        sql.Query("CREATE TABLE arc9_killcounter (weapon TEXT, npckills INTEGER, playerkills INTEGER)")
-    end
+    if !ARC9.KillCounterCache[weapon] then
+        if not sql.TableExists("arc9_killcounter") then
+            sql.Query("CREATE TABLE arc9_killcounter (weapon TEXT, npckills INTEGER, playerkills INTEGER)")
+        end
 
-    local npckills, playerkills = 0, 0
+        local data = sql.QueryRow("SELECT npckills, playerkills FROM arc9_killcounter WHERE weapon = '" .. weapon .. "'")
 
-    -- check whether the weapon is already in the table
-
-    if sql.QueryValue("SELECT weapon FROM arc9_killcounter WHERE weapon = '" .. weapon .. "'") then
-        npckills = sql.QueryValue("SELECT npckills FROM arc9_killcounter WHERE weapon = '" .. weapon .. "'")
-        playerkills = sql.QueryValue("SELECT playerkills FROM arc9_killcounter WHERE weapon = '" .. weapon .. "'")
-    else
-        sql.Query("INSERT INTO arc9_killcounter (weapon, npckills, playerkills) VALUES ('" .. weapon .. "', 0, 0)")
+        if data then
+            ARC9.KillCounterCache[weapon] = {
+                npckills = tonumber(data.npckills),
+                playerkills = tonumber(data.playerkills)
+            }
+        else
+            ARC9.KillCounterCache[weapon] = {
+                npckills = 0,
+                playerkills = 0
+            }
+        end
     end
 
     if ent:IsNPC() or ent:IsNextBot() then
-        npckills = npckills + 1
-        sql.Query("UPDATE arc9_killcounter SET npckills = " .. npckills .. " WHERE weapon = '" .. weapon .. "'")
+        ARC9.KillCounterCache[weapon].npckills = ARC9.KillCounterCache[weapon].npckills + 1
     else
-        playerkills = playerkills + 1
-        sql.Query("UPDATE arc9_killcounter SET playerkills = " .. playerkills .. " WHERE weapon = '" .. weapon .. "'")
+        ARC9.KillCounterCache[weapon].playerkills = ARC9.KillCounterCache[weapon].playerkills + 1
     end
 
-    self.NPCKills = npckills
-    self.PlayerKills = playerkills
+    ARC9.KillCounterCacheDirty[weapon] = true
+
+    self.NPCKills = ARC9.KillCounterCache[weapon].npckills
+    self.PlayerKills = ARC9.KillCounterCache[weapon].playerkills
 end
 
 if CLIENT then
@@ -138,6 +144,32 @@ if CLIENT then
         model:SetSubMaterial(2, "effects/arc9/gunscreen")
     end
 end
+
+function ARC9_SaveKillCounters()
+    for weapon, dirty in pairs(ARC9.KillCounterCacheDirty) do
+        if dirty then
+            local data = ARC9.KillCounterCache[weapon]
+            if data then
+                local escapedWeapon = sql.SQLStr(weapon)
+                local npckills = data.npckills
+                local playerkills = data.playerkills
+
+                -- Check if the weapon already exists in the table
+                local existing = sql.QueryValue("SELECT weapon FROM arc9_killcounter WHERE weapon = " .. escapedWeapon)
+
+                if existing then
+                    sql.Query("UPDATE arc9_killcounter SET npckills = " .. npckills .. ", playerkills = " .. playerkills .. " WHERE weapon = " .. escapedWeapon)
+                else
+                    sql.Query("INSERT INTO arc9_killcounter (weapon, npckills, playerkills) VALUES (" .. escapedWeapon .. ", " .. npckills .. ", " .. playerkills .. ")")
+                end
+            end
+        end
+    end
+    ARC9.KillCounterCacheDirty = {}
+end
+
+hook.Add("Shutdown", "ARC9_SaveKillCounters_Shutdown", ARC9_SaveKillCounters)
+timer.Create("ARC9_SaveKillCounters_Timer", 300, 0, ARC9_SaveKillCounters)
 
 ARC9.LoadAttachment(ATT, "charm_gs_killcounter")
 
