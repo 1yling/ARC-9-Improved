@@ -1,5 +1,6 @@
 AddCSLuaFile()
 
+-- Forcing LOD to -1 can improve performance by preventing the game from constantly switching between models.
 ARC9 = {}
 
 ARC9.Overrun = false

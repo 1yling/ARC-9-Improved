@@ -10,9 +10,10 @@ function SWEP:ShouldDoScope()
 end
 
 local arc9_fx_rtvm = GetConVar("arc9_fx_rtvm")
+local arc9_r_rt_details = GetConVar("arc9_r_rt_details")
 
 function SWEP:DoRT(fov, atttbl)
-    if ARC9.OverDraw then return end
+    if ARC9.OverDraw or !arc9_r_rt_details:GetBool() then return end
 
     local rtpos, rtang = self:GetShootPos()
 

@@ -767,7 +767,7 @@ local conVars = {
     },
     {
         name = "precache_sounds_onfirsttake",
-        default = "1",
+        default = "0",
         replicated = true
     },
     {
@@ -978,6 +978,11 @@ local conVars = {
     },
     {
         name = "drawprojectedlights",
+        default = "1",
+        client = true
+    },
+    {
+        name = "r_rt_details",
         default = "1",
         client = true
     },
