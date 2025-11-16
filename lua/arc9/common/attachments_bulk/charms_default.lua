@@ -87,60 +87,47 @@ if CLIENT then
     ATT.DrawFunc = function(self, model, wm)
         if wm then return end
 
-        render.PushRenderTarget(rtmat, 0, 0, 256, 256)
+        local npc_kills = self.NPCKills or 0
+        local player_kills = self.PlayerKills or 0
 
-        render.Clear(0, 0, 0, 0)
+        if self.LastNPCKills ~= npc_kills or self.LastPlayerKills ~= player_kills then
+            self.LastNPCKills = npc_kills
+            self.LastPlayerKills = player_kills
 
-        cam.Start2D()
+            render.PushRenderTarget(rtmat, 0, 0, 256, 256)
+            render.Clear(0, 0, 0, 0)
+            cam.Start2D()
 
-        local text = "KILLS"
+            surface.SetFont("ARC9_32_LCD")
+            local w, h = surface.GetTextSize("KILLS")
+            surface.SetTextPos(128 - w / 2, 32)
+            surface.SetTextColor(255, 255, 255, 255)
+            surface.DrawText("KILLS")
 
-        surface.SetFont("ARC9_32_LCD")
+            surface.SetFont("ARC9_32_LCD")
+            local wpk, hpk = surface.GetTextSize("PLY | NPC")
+            surface.SetTextPos(128 - wpk / 2, 64 + 8)
+            surface.SetTextColor(255, 255, 255, 255)
+            surface.DrawText("PLY | NPC")
 
-        local w, h = surface.GetTextSize(text)
+            surface.SetFont("ARC9_48_LCD")
+            local w2, h2 = surface.GetTextSize(player_kills)
+            surface.SetTextPos(32, 120)
+            surface.SetTextColor(255, 255, 255, 255)
+            surface.DrawText(player_kills)
 
-        surface.SetTextPos(128 - w / 2, 32)
-        surface.SetTextColor(255, 255, 255, 255)
-        surface.DrawText(text)
+            surface.SetFont("ARC9_48_LCD")
+            local w3, h3 = surface.GetTextSize(npc_kills)
+            surface.SetTextPos(256 - w3 - 16 - 5, 120)
+            surface.SetTextColor(255, 255, 255, 255)
+            surface.DrawText(npc_kills)
 
-        local text_pk = "PLY | NPC"
-
-        surface.SetFont("ARC9_32_LCD")
-
-        local wpk, hpk = surface.GetTextSize(text_pk)
-
-        surface.SetTextPos(128 - wpk / 2, 64 + 8)
-        surface.SetTextColor(255, 255, 255, 255)
-        surface.DrawText(text_pk)
-
-        local text2 = tostring(self.PlayerKills or 0)
-
-        surface.SetFont("ARC9_48_LCD")
-
-        local w2, h2 = surface.GetTextSize(text2)
-
-        surface.SetTextPos(32, 120)
-        surface.SetTextColor(255, 255, 255, 255)
-        surface.DrawText(text2)
-
-        local text3 = tostring(self.NPCKills or 0)
-
-        surface.SetFont("ARC9_48_LCD")
-
-        local w3, h3 = surface.GetTextSize(text3)
-
-        surface.SetTextPos(256 - w3 - 16 - 5, 120)
-        surface.SetTextColor(255, 255, 255, 255)
-        surface.DrawText(text3)
-
-        cam.End2D()
-
-        render.PopRenderTarget()
+            cam.End2D()
+            render.PopRenderTarget()
+        end
 
         rtsurf:SetTexture("$basetexture", rtmat)
-
         model:SetSubMaterial()
-
         model:SetSubMaterial(2, "effects/arc9/gunscreen")
     end
 end
@@ -193,48 +180,41 @@ ATT.Category = {"charm", "gunscreen"}
 
 if CLIENT then
     local rtmat = GetRenderTarget("arc9_gunscreen", 256, 256, false)
+    local last_draw = 0
 
     ATT.DrawFunc = function(self, model, wm)
         if wm then return end
 
-        render.PushRenderTarget(rtmat, 0, 0, 256, 256)
+        if CurTime() > last_draw + 1 then
+            last_draw = CurTime()
+            render.PushRenderTarget(rtmat, 0, 0, 256, 256)
+            render.Clear(0, 0, 0, 0)
+            cam.Start2D()
 
-        render.Clear(0, 0, 0, 0)
+            local text = os.date("%H:%M")
+            if CurTime() % 2 < 1 then
+                text = string.Replace(text, ":", " ")
+            end
 
-        cam.Start2D()
+            surface.SetFont("ARC9_48_LCD")
+            local w, h = surface.GetTextSize(text)
+            surface.SetTextPos(128 - w / 2, 128 - h / 2 - 24)
+            surface.SetTextColor(255, 255, 255, 255)
+            surface.DrawText(text)
 
-        local text = os.date("%H:%M")
+            local text_date = os.date("%d %b")
+            surface.SetFont("ARC9_32_LCD")
+            local w_date, h_date = surface.GetTextSize(text_date)
+            surface.SetTextPos(128 - w_date / 2, 128 - h_date / 2 + 24)
+            surface.SetTextColor(255, 255, 255, 255)
+            surface.DrawText(text_date)
 
-        if CurTime() % 2 < 1 then
-            text = string.Replace(text, ":", " ")
+            cam.End2D()
+            render.PopRenderTarget()
         end
 
-        surface.SetFont("ARC9_48_LCD")
-
-        local w, h = surface.GetTextSize(text)
-
-        surface.SetTextPos(128 - w / 2, 128 - h / 2 - 24)
-        surface.SetTextColor(255, 255, 255, 255)
-        surface.DrawText(text)
-
-        local text_date = os.date("%d %b")
-
-        surface.SetFont("ARC9_32_LCD")
-
-        local w_date, h_date = surface.GetTextSize(text_date)
-
-        surface.SetTextPos(128 - w_date / 2, 128 - h_date / 2 + 24)
-        surface.SetTextColor(255, 255, 255, 255)
-        surface.DrawText(text_date)
-
-        cam.End2D()
-
-        render.PopRenderTarget()
-
         rtsurf:SetTexture("$basetexture", rtmat)
-
         model:SetSubMaterial()
-
         model:SetSubMaterial(2, "effects/arc9/gunscreen")
     end
 end
