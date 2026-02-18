@@ -2,6 +2,7 @@ function SWEP:PlayAnimation(anim, mult, lock, delayidle, noproxy, notranslate, n
     mult = mult or 1
     lock = lock or false
     local untranslatedanim = anim
+    self:SetCurrentAnimation(untranslatedanim)
     anim = (notranslate == true) and anim or self:TranslateAnimation(anim)
     mult = self:RunHook("Hook_TranslateAnimSpeed", {mult = mult, anim = anim}).Mult or mult
     local omult = mult
@@ -367,6 +368,15 @@ function SWEP:ThinkAnimation()
     end
 
     local mult = self:GetSequenceSpeed()
+    local anim = self:GetCurrentAnimation()
+
+    if self:GetCustomize() and anim == "customization" then
+        local animation = self:GetAnimationEntry(anim)
+        local pause = animation.CustomizPause or animation.customizpause
+        if pause and self:GetSequenceCycle() >= pause then
+            mult = 0
+        end
+    end
 
     self:SetSequenceCycle(self:GetSequenceCycle() + (FrameTime() * mult))
 end

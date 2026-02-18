@@ -230,8 +230,22 @@ function SWEP:ToggleCustomize(on)
 
     self:SetInSights(false)
 
-    if !on then
-        if self:HasAnimation("postcustomize") then
+    if on then
+        if self:HasAnimation("customization") then
+            self:PlayAnimation("customization", 1, true)
+        end
+    else
+        local wascust = self:GetCurrentAnimation() == "customization"
+        if wascust then
+            local animation = self:GetAnimationEntry("customization")
+            local time = animation.Time or (IsValid(self:GetVM()) and self:GetVM():SequenceDuration(self:GetSequenceIndex()) or 1)
+            local amult = animation.Mult or 1
+            local speed = (1 / time) / amult
+            local remaining = (1 - self:GetSequenceCycle()) / speed
+            self:SetNextIdle(CurTime() + remaining)
+        end
+
+        if self:HasAnimation("postcustomize") and !wascust then
             self:CancelReload()
             self:PlayAnimation("postcustomize", 1, true)
         end

@@ -403,22 +403,34 @@ function SWEP:GetViewModelPosition(pos, ang)
     end
 
     if curvedcustomizedelta > 0 then
-        local cpos = Vector(self:GetProcessedValue("CustomizePos", true))
-        local cang = self:GetProcessedValue("CustomizeAng", true)
         LerpVectorEdit(curvedcustomizedelta, extra_offsetpos, vector_origin)
         LerpAngleEdit(curvedcustomizedelta, extra_offsetang, angle_zero)
 
-        if self.BottomBarMode == 1 then
-            cpos[3] = cpos[3] + 2
-        else
-            cpos[3] = cpos[3] + 1.5
+        local is_cust_anim = self:GetCurrentAnimation() == "customization"
+        local animation = is_cust_anim and self:GetAnimationEntry("customization")
+
+        local cpos = is_cust_anim and animation.CustomizPos
+        local cang = is_cust_anim and animation.CustomizAng
+
+        if !is_cust_anim then
+            cpos = Vector(self:GetProcessedValue("CustomizePos", true))
+            cang = self:GetProcessedValue("CustomizeAng", true)
+
+            if self.BottomBarMode == 1 then
+                cpos[3] = cpos[3] + 2
+            else
+                cpos[3] = cpos[3] + 1.5
+            end
+
+            cpos[1] = cpos[1] + self.CustomizePanX
+            cpos[3] = cpos[3] - self.CustomizePanY
+            cpos[2] = cpos[2] + self.CustomizeZoom - 15
         end
 
-        cpos[1] = cpos[1] + self.CustomizePanX
-        cpos[3] = cpos[3] - self.CustomizePanY
-        cpos[2] = cpos[2] + self.CustomizeZoom - 15
-        LerpVectorEdit(curvedcustomizedelta, offsetpos, cpos)
-        LerpAngleEdit(curvedcustomizedelta, offsetang, cang)
+        if cpos and cang then
+            LerpVectorEdit(curvedcustomizedelta, offsetpos, cpos)
+            LerpAngleEdit(curvedcustomizedelta, offsetang, cang)
+        end
     end
 
     local ht = self:GetHolsterTime()
@@ -501,7 +513,17 @@ function SWEP:GetViewModelPosition(pos, ang)
 
     -- CUSTOMISATION ROTATION AFTER DAMPING
     if curvedcustomizedelta > 0 then
-        if !self.CustomizeNoRotate then
+        local is_cust_anim = self:GetCurrentAnimation() == "customization"
+        local animation = is_cust_anim and self:GetAnimationEntry("customization")
+        local norotate = self.CustomizeNoRotate
+
+        if is_cust_anim and animation and animation.CustomizNoRotate != nil then
+            norotate = animation.CustomizNoRotate
+        elseif is_cust_anim then
+            norotate = true
+        end
+
+        if !norotate then
             self.CustomizePitch = math.NormalizeAngle(self.CustomizePitch) * curvedcustomizedelta
             self.CustomizeYaw = math.NormalizeAngle(self.CustomizeYaw) * curvedcustomizedelta
             self.CustomizeRoll = math.NormalizeAngle(self.CustomizeRoll) * curvedcustomizedelta

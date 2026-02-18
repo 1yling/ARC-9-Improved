@@ -1644,6 +1644,7 @@ function SWEP:SetupDataTables()
     self:NetworkVar("Vector", 6, "VisualRecoilAcc")
 
     self:NetworkVar("String", 0, "IKAnimation")
+    self:NetworkVar("String", 1, "CurrentAnimation")
 
     self:NetworkVar("Entity", 0, "Holster_Entity")
     self:NetworkVar("Entity", 1, "LungeEntity")
