@@ -61,7 +61,9 @@ function SWEP:Think()
     local now = CurTime()
 
     if swepDt.NextIdle < now then
-        swepIdle(self)
+        if not (swepDt.Customize and self:GetCurrentAnimation() == "customization") then
+            swepIdle(self)
+        end
     end
 
     local shouldRunPredicted = not self:PredictionFilter()

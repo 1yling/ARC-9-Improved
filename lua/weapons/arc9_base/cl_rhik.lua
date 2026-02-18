@@ -22,9 +22,14 @@ function SWEP:DoRHIK(wm)
     local hasonehandsprint = self:GetValue("OneHandedSprint")
     local hide_lh_d = 0
     local hide_rh_d = 0
-    hide_lh_d = self.CustomizeDelta
-    if hasonehandsprint then hide_lh_d = hide_lh_d + self:GetSprintAmount() end
-    hide_rh_d = self.CustomizeDelta
+    if self:GetCurrentAnimation() == "customization" then
+        hide_lh_d = 0
+        hide_rh_d = 0
+    else
+        hide_lh_d = self.CustomizeDelta
+        if hasonehandsprint then hide_lh_d = hide_lh_d + self:GetSprintAmount() end
+        hide_rh_d = self.CustomizeDelta
+    end
     hide_lh_d = math.ease.InExpo(hide_lh_d)
     hide_rh_d = math.ease.InCubic(hide_rh_d)
     if ARC9.PresetCam then

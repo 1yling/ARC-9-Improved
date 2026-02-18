@@ -403,22 +403,25 @@ function SWEP:GetViewModelPosition(pos, ang)
     end
 
     if curvedcustomizedelta > 0 then
-        local cpos = Vector(self:GetProcessedValue("CustomizePos", true))
-        local cang = self:GetProcessedValue("CustomizeAng", true)
         LerpVectorEdit(curvedcustomizedelta, extra_offsetpos, vector_origin)
         LerpAngleEdit(curvedcustomizedelta, extra_offsetang, angle_zero)
 
-        if self.BottomBarMode == 1 then
-            cpos[3] = cpos[3] + 2
-        else
-            cpos[3] = cpos[3] + 1.5
-        end
+        if self:GetCurrentAnimation() != "customization" then
+            local cpos = Vector(self:GetProcessedValue("CustomizePos", true))
+            local cang = self:GetProcessedValue("CustomizeAng", true)
 
-        cpos[1] = cpos[1] + self.CustomizePanX
-        cpos[3] = cpos[3] - self.CustomizePanY
-        cpos[2] = cpos[2] + self.CustomizeZoom - 15
-        LerpVectorEdit(curvedcustomizedelta, offsetpos, cpos)
-        LerpAngleEdit(curvedcustomizedelta, offsetang, cang)
+            if self.BottomBarMode == 1 then
+                cpos[3] = cpos[3] + 2
+            else
+                cpos[3] = cpos[3] + 1.5
+            end
+
+            cpos[1] = cpos[1] + self.CustomizePanX
+            cpos[3] = cpos[3] - self.CustomizePanY
+            cpos[2] = cpos[2] + self.CustomizeZoom - 15
+            LerpVectorEdit(curvedcustomizedelta, offsetpos, cpos)
+            LerpAngleEdit(curvedcustomizedelta, offsetang, cang)
+        end
     end
 
     local ht = self:GetHolsterTime()
@@ -500,7 +503,7 @@ function SWEP:GetViewModelPosition(pos, ang)
     pos, ang = LocalToWorld(pos, ang, oldpos, oldang)
 
     -- CUSTOMISATION ROTATION AFTER DAMPING
-    if curvedcustomizedelta > 0 then
+    if curvedcustomizedelta > 0 and self:GetCurrentAnimation() != "customization" then
         if !self.CustomizeNoRotate then
             self.CustomizePitch = math.NormalizeAngle(self.CustomizePitch) * curvedcustomizedelta
             self.CustomizeYaw = math.NormalizeAngle(self.CustomizeYaw) * curvedcustomizedelta
